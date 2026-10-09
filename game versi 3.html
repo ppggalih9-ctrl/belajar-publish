@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Petualangan Dapur Pecahan - Chef Boni</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Fredoka', cursive, sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background-color: #2b2d42;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* LOADING SCREEN */
+    #loadingScreen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    .loader-chef {
+      font-size: 80px;
+      animation: bounce 0.8s infinite alternate ease-in-out;
+    }
+
+    .loading-bar-container {
+      width: 260px; height: 20px;
+      background-color: rgba(255, 255, 255, 0.6);
+      border-radius: 20px;
+      overflow: hidden;
+      margin-top: 20px;
+      border: 3px solid #ffffff;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .loading-bar {
+      width: 0%; height: 100%;
+      background-color: #ff5964;
+      border-radius: 20px;
+      transition: width 0.1s ease;
+    }
+
+    .loading-text {
+      margin-top: 12px;
+      font-size: 1.2rem;
+      color: #d63031;
+      font-weight: 700;
+    }
+
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-20px); }
+    }
+
+    /* KOMIK SCREEN */
+    #comicScreen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background-color: #1a1a1a;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 8888;
+    }
+
+    .comic-wrapper {
+      width: 100%; height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 20px 110px 20px;
+    }
+
+    .comic-image {
+      max-width: 100%; max-height: 100%;
+      object-fit: contain;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .controls-container {
+      position: absolute;
+      bottom: 24px;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .dots-container { display: flex; gap: 8px; }
+    .dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background-color: rgba(255, 255, 255, 0.3);
+      transition: all 0.3s ease;
+    }
+    .dot.active { background-color: #ff5964; width: 28px; border-radius: 10px; }
+    .button-group { display: flex; gap: 12px; }
+
+    .btn-comic {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 1.1rem; padding: 12px 28px;
+      border: none; border-radius: 50px;
+      cursor: pointer; transition: all 0.2s ease; color: #fff;
+    }
+    .btn-prev { background-color: #4a4a4a; box-shadow: 0 4px 0px #2b2b2b; }
+    .btn-next { background-color: #ff5964; box-shadow: 0 4px 0px #b32b34; }
+    .btn-comic:active { transform: translateY(3px); box-shadow: none; }
+
+    /* ROADMAP / PETA LEVEL */
+    #roadmapScreen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: radial-gradient(circle, #ffeaa7 0%, #fab1a0 100%);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      z-index: 7777;
+      padding: 30px 20px;
+      overflow-y: auto;
+    }
+
+    .roadmap-header {
+      background: rgba(255, 255, 255, 0.85);
+      padding: 12px 28px;
+      border-radius: 30px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      border: 3px solid #ff7675;
+      margin-bottom: 25px;
+      text-align: center;
+    }
+
+    .roadmap-title {
+      font-size: 2.2rem;
+      color: #d63031;
+      text-shadow: 1px 1px 0px #fff;
+    }
+
+    .roadmap-subtitle {
+      font-size: 0.95rem;
+      color: #636e72;
+      font-weight: 600;
+    }
+
+    .roadmap-container {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 25px;
+      width: 100%;
+      max-width: 600px;
+      padding-bottom: 40px;
+    }
+
+    .node-level {
+      position: relative;
+      z-index: 2;
+      width: 130px; height: 130px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #ffffff, #f1f2f6);
+      border: 5px solid #ff7675;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.15), inset 0 -4px 0 rgba(0,0,0,0.1);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .node-level.unlocked {
+      animation: pulseGlow 2s infinite alternate;
+    }
+
+    .node-level.completed {
+      border-color: #00b894;
+      background: linear-gradient(145deg, #e8f8f5, #ffffff);
+    }
+
+    .node-level:hover:not(.locked) {
+      transform: scale(1.1) translateY(-5px);
+      box-shadow: 0 15px 25px rgba(0,0,0,0.2);
+    }
+
+    .node-level.locked {
+      background: #dfe6e9;
+      border-color: #b2bec3;
+      box-shadow: 0 6px 0 #b2bec3;
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+
+    .node-icon { font-size: 1.8rem; margin-bottom: 2px; }
+    .node-number { font-size: 1.2rem; font-weight: 700; color: #2d3436; }
+    .node-badge {
+      font-size: 0.7rem;
+      padding: 3px 8px;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 700;
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    .badge-completed { background-color: #00b894; }
+    .badge-unlocked { background-color: #ff7675; }
+    .badge-locked { background-color: #636e72; }
+
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 0 0 rgba(255, 118, 117, 0.6); }
+      100% { box-shadow: 0 0 0 15px rgba(255, 118, 117, 0); }
+    }
+
+    /* MAIN APP */
+    #appScreen {
+      display: none;
+      width: 100vw;
+      min-height: 100vh;
+      background-color: #e8f5e9;
+      padding: 12px;
+      box-sizing: border-box;
+    }
+
+    .app-container {
+      width: 100%; max-width: 1000px; margin: 0 auto;
+      background-color: #f4fbf7;
+      border: 4px solid #a3e4d7;
+      border-radius: 24px;
+      display: flex; flex-direction: column;
+      padding: 16px; gap: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+
+    .top-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background-color: #ffffff; padding: 8px 16px;
+      border-radius: 16px; border: 2px solid #e0e0e0; flex-wrap: wrap; gap: 10px;
+    }
+
+    .pills-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .pill {
+      padding: 6px 14px; border-radius: 20px; font-weight: 700;
+      font-size: 0.85rem; color: white; display: flex; align-items: center; gap: 6px; cursor: pointer;
+    }
+    .pill-map { background-color: #48cae4; }
+    .pill-history { background-color: #6c5ce7; }
+    .pill-sub { background-color: #2b2d42; }
+
+    .stats-group { display: flex; gap: 10px; align-items: center; }
+    .stat-box {
+      background-color: #fff3bf; padding: 6px 12px; border-radius: 12px;
+      font-weight: 700; color: #d97706; border: 1.5px solid #fde047; font-size: 0.9rem;
+    }
+    .timer-box {
+      background-color: #ffe3e3; color: #e03131; border: 1.5px solid #ffc9c9;
+      padding: 6px 14px; border-radius: 12px; font-weight: 700; font-size: 0.95rem;
+    }
+
+    .level-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+    .btn-level {
+      padding: 8px 16px; border-radius: 12px; border: none;
+      font-weight: 700; cursor: pointer; background-color: #e0e0e0; color: #757575;
+      white-space: nowrap; flex-shrink: 0; transition: all 0.2s;
+    }
+    .btn-level.active { background-color: #ff5964; color: white; box-shadow: 0 3px 0 #b32b34; }
+    .btn-level.disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .banner-box {
+      background-color: #ffffff; border: 2px solid #b2f2bb;
+      border-radius: 18px; padding: 12px 18px; display: flex; align-items: center; gap: 12px;
+      justify-content: space-between;
+    }
+    .banner-left { display: flex; align-items: center; gap: 12px; }
+    .chef-avatar {
+      width: 50px; height: 50px; background-color: #ffe8cc; border-radius: 50%;
+      display: flex; justify-content: center; align-items: center; font-size: 28px;
+      border: 2px solid #ffa8a8; flex-shrink: 0;
+    }
+    .banner-text { font-size: 0.95rem; color: #2b2d42; font-weight: 600; line-height: 1.4; }
+
+    /* WORKSPACE */
+    .workspace {
+      min-height: 320px; background-color: #ffffff; border-radius: 20px;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center; padding: 20px; gap: 20px; position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .workspace.mode-latihan { border: 4px solid #2ec4b6; background-color: #e8f8f5; }
+    .workspace.mode-soal { border: 4px solid #ff5964; background-color: #fff5f5; }
+
+    .mode-badge {
+      position: absolute; top: 12px; left: 16px;
+      padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 0.8rem; color: white;
+    }
+    .mode-badge.latihan { background-color: #2ec4b6; }
+    .mode-badge.soal { background-color: #ff5964; }
+
+    /* MATH ELEMENTS */
+    .frac-container { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; padding: 0 4px; }
+    .frac-num { border-bottom: 2px solid #2b2d42; padding-bottom: 1px; font-weight: 700; }
+    .frac-den { padding-top: 1px; font-weight: 700; }
+
+    .bread-tray {
+      background-color: #b07d62; padding: 16px 24px; border-radius: 24px;
+      display: flex; gap: 16px; box-shadow: inset 0 4px 8px rgba(0,0,0,0.2), 0 6px 0 #8d5b4c; flex-wrap: wrap; justify-content: center;
+    }
+    .bread-slice {
+      width: 75px; height: 75px; background-color: #ffedd8; border: 4px solid #d4a373;
+      border-radius: 16px; display: flex; justify-content: center; align-items: center;
+      font-size: 1.1rem; font-weight: 700; color: #7f5539; cursor: pointer;
+      transition: all 0.2s ease; box-shadow: 0 4px 0 #ccd5ae; position: relative;
+    }
+    .bread-slice.selected { background-color: #ffd166; border-color: #f77f00; transform: translateY(-4px); box-shadow: 0 6px 0 #f77f00; }
+    .bread-slice.selected::after {
+      content: "✓"; position: absolute; top: -8px; right: -6px;
+      background-color: #2ec4b6; color: white; width: 22px; height: 22px;
+      border-radius: 50%; font-size: 12px; display: flex; justify-content: center; align-items: center;
+    }
+
+    .dnd-container { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; }
+    .dnd-zone {
+      display: flex; gap: 10px; padding: 12px; background: #fff; border: 2px dashed #2ec4b6;
+      border-radius: 14px; min-width: 180px; min-height: 70px; align-items: center; justify-content: center; flex-wrap: wrap;
+    }
+    .fruit-slot {
+      width: 50px; height: 50px; border: 1px dashed #aaa; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; position: relative;
+    }
+    .fruit-slot.is-empty::after { content: attr(data-ghost); opacity: 0.25; font-size: 1.8em; }
+    .draggable-fruit, .draggable-pizza-card { cursor: grab; user-select: none; touch-action: none; }
+
+    .bread-container-fixed { display: flex; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    .choco-slice { flex: 1; background: #795548; opacity: 0.3; border: 1px dashed #3e2723; cursor: pointer; transition: all 0.2s; height: 40px; }
+    .choco-slice.selected { background: #ffb74d !important; opacity: 1 !important; }
+
+    .input-frac-box {
+      width: 65px; height: 45px; text-align: center; font-size: 1.3rem; font-weight: bold;
+      border: 2px solid #ff5964; border-radius: 8px; outline: none; background: #fff;
+    }
+    .input-frac-box:focus { border-color: #2ec4b6; box-shadow: 0 0 5px rgba(46,196,182,0.5); }
+
+    .slice-control-btn {
+      padding: 8px 16px; border: none; background: #2ec4b6; color: white;
+      border-radius: 10px; font-weight: bold; cursor: pointer; transition: transform 0.1s;
+    }
+    .slice-control-btn:active { transform: scale(0.95); }
+
+    .pizza-slice-item {
+      cursor: grab; user-select: none; display: inline-block; transition: transform 0.1s; touch-action: none;
+    }
+    .pizza-slice-item:active { cursor: grabbing; }
+
+    .sort-slot {
+      width: 110px; height: 130px; border: 2px dashed #aaa; border-radius: 12px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff;
+    }
+    .sort-slot-label { font-size: 0.8em; color: #777; margin-bottom: 5px; }
+
+    .interactive-item { cursor: pointer; padding: 10px; border-radius: 12px; border: 2px solid transparent; transition: all 0.2s; }
+    .interactive-item:hover { border-color: #ff5964; background: #fff0f0; }
+
+    .bottom-bar { display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn-action {
+      padding: 10px 20px; border-radius: 50px; border: none; font-weight: 700;
+      font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; color: white; transition: transform 0.1s ease;
+    }
+    .btn-action:active { transform: translateY(2px); }
+    .btn-sound { background-color: #2ec4b6; box-shadow: 0 4px 0 #0f9f90; padding: 6px 12px; font-size: 0.85rem;}
+    .btn-check { background-color: #ff5964; box-shadow: 0 4px 0 #b32b34; }
+    .btn-latihan { background-color: #2ec4b6; box-shadow: 0 4px 0 #0f9f90; }
+    .btn-sheets { background-color: #0F9D58; box-shadow: 0 4px 0 #0B7240; }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 10000;
+    }
+    .modal-card {
+      background: white; padding: 24px; border-radius: 20px; width: 90%; max-width: 440px;
+      display: flex; flex-direction: column; gap: 14px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;
+    }
+    .modal-card input { padding: 10px 14px; border-radius: 10px; border: 2px solid #ddd; font-size: 1rem; outline: none; }
+    .modal-card input:focus { border-color: #2ec4b6; }
+    .modal-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .modal-buttons button { flex: 1; }
+
+    .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+    .history-table th, .history-table td { border: 1px solid #ddd; padding: 6px; text-align: center; }
+    .history-table th { background-color: #f2f2f2; }
+  </style>
+</head>
+<body>
+
+  <!-- 1. LOADING SCREEN -->
+  <div id="loadingScreen">
+    <div class="loader-chef">👨‍🍳</div>
+    <div class="loading-bar-container">
+      <div class="loading-bar" id="loadingBar"></div>
+    </div>
+    <div class="loading-text" id="loadingText">Memuat Dapur... 0%</div>
+  </div>
+
+  <!-- 2. KOMIK SCREEN -->
+  <div id="comicScreen">
+    <div class="comic-wrapper">
+      <img id="comicImage" src="" alt="Komik Petualangan Dapur" class="comic-image">
+    </div>
+
+    <div class="controls-container">
+      <div class="dots-container" id="dotsContainer"></div>
+      
+      <div class="button-group">
+        <button id="btnPrevComic" class="btn-comic btn-prev" onclick="prevComic()" style="display: none;">
+          ⇠ Kembali
+        </button>
+        <button id="btnNextComic" class="btn-comic btn-next" onclick="nextComic()">
+          Lanjut ➔
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL IDENTITAS SISWA -->
+  <div class="modal-overlay" id="nameModal" style="display: none; z-index: 99999;">
+    <div class="modal-card">
+      <h3>👨‍🍳 Masukkan Identitas Kamu</h3>
+      <p style="font-size: 0.85rem; color: #555;">Tuliskan nama lengkapmu agar akumulasi nilai dapat tersimpan di spreadsheet guru!</p>
+      <input type="text" id="initialStudentName" placeholder="Contoh: Budi Santoso">
+      <div class="modal-buttons">
+        <button class="btn-comic btn-next" onclick="saveStudentName()">Mulai Petualangan ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. ROADMAP / PETA LEVEL -->
+  <div id="roadmapScreen">
+    <div class="roadmap-header">
+      <h1 class="roadmap-title">🗺️ Peta Petualangan Dapur</h1>
+      <p class="roadmap-subtitle">Bantu Chef Boni menyelesaikan tantangan memasak pecahan!</p>
+    </div>
+    <div class="roadmap-container" id="roadmapGrid"></div>
+  </div>
+
+  <!-- 4. APLIKASI UTAMA -->
+  <div id="appScreen">
+    <div class="app-container">
+      
+      <!-- Top Bar -->
+      <div class="top-bar">
+        <div class="pills-group">
+          <div class="pill pill-map" onclick="showRoadmap()">🗺️ Peta Level</div>
+          <div class="pill pill-history" onclick="showHistoryModal()">📋 Riwayat Soal</div>
+          <div class="pill pill-sub">👨‍🍳 CHEF BONI</div>
+        </div>
+        
+        <div class="stats-group">
+          <div class="timer-box" id="timerDisplay">⏱️ 00:00</div>
+          <div class="stat-box">⭐ Skor Akumulasi: <span id="scoreText">0</span> / 100</div>
+        </div>
+      </div>
+
+      <!-- Level Selector Bar -->
+      <div class="level-bar" id="levelBar">
+        <button class="btn-level active" id="btn-lvl-1" onclick="switchLevel(1)">Lv 1</button>
+        <button class="btn-level disabled" id="btn-lvl-2" onclick="switchLevel(2)">Lv 2 🔒</button>
+        <button class="btn-level disabled" id="btn-lvl-3" onclick="switchLevel(3)">Lv 3 🔒</button>
+        <button class="btn-level disabled" id="btn-lvl-4" onclick="switchLevel(4)">Lv 4 🔒</button>
+        <button class="btn-level disabled" id="btn-lvl-5" onclick="switchLevel(5)">Lv 5 🔒</button>
+        <button class="btn-level disabled" id="btn-lvl-6" onclick="switchLevel(6)">Lv 6 🔒</button>
+        <button class="btn-level disabled" id="btn-lvl-7" onclick="switchLevel(7)">Lv 7 🔒</button>
+      </div>
+
+      <!-- Instruction Banner -->
+      <div class="banner-box">
+        <div class="banner-left">
+          <div class="chef-avatar">👨‍🍳</div>
+          <div class="banner-text" id="bannerText">
+            <strong>Petunjuk Level:</strong> Memuat instruksi...
+          </div>
+        </div>
+        <button class="btn-action btn-sound" onclick="speakCurrentQuestion()">🔊 Bacakan Soal</button>
+      </div>
+
+      <!-- Main Workspace -->
+      <div class="workspace mode-latihan" id="stageArea">
+        <div class="mode-badge latihan" id="modeBadge">MODE LATIHAN</div>
+        <div id="workspaceContent"></div>
+      </div>
+
+      <!-- Bottom Actions -->
+      <div class="bottom-bar">
+        <button class="btn-action btn-sheets" id="btnSheetsFinal" onclick="openSheetsModal()" style="display: none;">📊 Kirim Nilai ke Spreadsheet</button>
+        <button class="btn-action btn-latihan" id="btnAction" onclick="handleAction()">Selesai Latihan ➔</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL RIWAYAT PENGERJAAN -->
+  <div class="modal-overlay" id="historyModal">
+    <div class="modal-card">
+      <h3>📋 Riwayat Pengerjaan Siswa</h3>
+      <div style="max-height: 250px; overflow-y: auto;">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Level</th>
+              <th>Status</th>
+              <th>Percobaan</th>
+              <th>Waktu Lulus</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody"></tbody>
+        </table>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn-comic btn-next" onclick="closeHistoryModal()">Tutup 👍</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL KIRIM SPREADSHEET MANUAL -->
+  <div class="modal-overlay" id="sheetsModal">
+    <div class="modal-card">
+      <h3>📊 Kirim Nilai Akumulasi ke Spreadsheet</h3>
+      <p style="font-size: 0.85rem; color: #555;">Selamat! Klik tombol di bawah untuk memastikan akumulasi nilai seluruh level, total percobaan, dan durasi terkirim ke rekap spreadsheet guru!</p>
+      <label style="font-size: 0.9rem; font-weight:600; text-align:left;">Nama Siswa:</label>
+      <input type="text" id="studentName" placeholder="Contoh: Budi Santoso">
+      
+      <div class="modal-buttons">
+        <button class="btn-comic btn-prev" onclick="closeSheetsModal()">Batal</button>
+        <button class="btn-comic btn-sheets" onclick="submitFinalDataToSpreadsheet()">Kirim Nilai ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GENERAL MODAL POPUP -->
+  <div class="modal-overlay" id="modalBox">
+    <div class="modal-card">
+      <h3 id="modalTitle">Informasi</h3>
+      <p id="modalBody" style="color: #4a5568; font-size: 0.95rem; line-height: 1.4;"></p>
+      
+      <div class="modal-buttons">
+        <button class="btn-comic btn-next" id="btnModalClose" onclick="closeModal()">Coba Lagi 🔄</button>
+        <button class="btn-comic btn-next" id="btnNextLevelModal" style="display:none; background-color:#2ec4b6;" onclick="goToNextLevel()">Lanjut ke Level Berikutnya ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* INTEGRASI SPREADSHEET GOOGLE APPS SCRIPT URL BARU */
+    const SPREADSHEET_URL = 'https://script.google.com/macros/s/AKfycbyQEWJAFioTBI28KbLxFBfBOvcgV0iT5wTn589untU7Rdu6A2BtbhZa7jZjvNGj9mQQWg/exec';
+    let globalStudentName = "";
+
+    // Fungsi pengiriman nilai akumulasi dari seluruh level
+    function sendDataToSpreadsheet(statusText = "Dalam Progres") {
+      if (!globalStudentName) return;
+
+      // Hitung total akumulasi percobaan di seluruh level
+      let totalAttempts = 0;
+      let completedLevels = 0;
+      for (let i = 1; i <= 7; i++) {
+        totalAttempts += levelStats[i].attempts;
+        if (levelStats[i].passed) completedLevels++;
+      }
+
+      const payload = {
+        nama: globalStudentName,
+        level: completedLevels === 7 ? "Seluruh Level Selesai (Lv 1-7)" : `Progres: Level ${unlockedLevel} (Lulus ${completedLevels}/7)`,
+        status: statusText,
+        percobaan: totalAttempts,
+        skor: currentScore,
+        durasi: getTimeString()
+      };
+
+      fetch(SPREADSHEET_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(() => {
+        console.log("Data Akumulasi berhasil dikirim ke Spreadsheet");
+      }).catch(err => console.error('Gagal mengirim ke Spreadsheet:', err));
+    }
+
+    /* GLOBAL STATE */
+    let currentLevel = 1;
+    let unlockedLevel = 1;
+    let currentScore = 0;
+    let secondsElapsed = 0;
+    let timerInterval = null;
+    let isSoalMode = false;
+
+    let levelStats = {
+      1: { attempts: 0, passed: false, timePassed: '-' },
+      2: { attempts: 0, passed: false, timePassed: '-' },
+      3: { attempts: 0, passed: false, timePassed: '-' },
+      4: { attempts: 0, passed: false, timePassed: '-' },
+      5: { attempts: 0, passed: false, timePassed: '-' },
+      6: { attempts: 0, passed: false, timePassed: '-' },
+      7: { attempts: 0, passed: false, timePassed: '-' }
+    };
+
+    let levelIcons = {
+      1: "🍞", 2: "🍎", 3: "🍕", 4: "🍫", 5: "📊", 6: "➕", 7: "🏆"
+    };
+
+    let selectedBreadCountLvl1 = 0;
+    
+    // Level 3 Canvas State
+    let cutLinesLvl3 = [];
+    let isDrawingLvl3 = false;
+    let drawStartX = 0, drawStartY = 0;
+    let currentDragX = 0, currentDragY = 0;
+    
+    let activeQuestion = {};
+
+    /* HELPER INTERAKSI TOUCH / MOUSE */
+    function enableTouchDrag(element, getDropTargets, onDropSuccess) {
+      let activeClone = null;
+
+      function onStart(e) {
+        const touch = e.touches ? e.touches[0] : e;
+        activeClone = element.cloneNode(true);
+        activeClone.style.position = 'fixed';
+        activeClone.style.pointerEvents = 'none';
+        activeClone.style.opacity = '0.85';
+        activeClone.style.zIndex = '99999';
+        activeClone.style.width = element.offsetWidth + 'px';
+        activeClone.style.height = element.offsetHeight + 'px';
+        activeClone.style.left = (touch.clientX - element.offsetWidth / 2) + 'px';
+        activeClone.style.top = (touch.clientY - element.offsetHeight / 2) + 'px';
+        document.body.appendChild(activeClone);
+
+        window.addEventListener('touchmove', onMove, { passive: false });
+        window.addEventListener('touchend', onEnd);
+      }
+
+      function onMove(e) {
+        if (!activeClone) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        activeClone.style.left = (touch.clientX - element.offsetWidth / 2) + 'px';
+        activeClone.style.top = (touch.clientY - element.offsetHeight / 2) + 'px';
+      }
+
+      function onEnd(e) {
+        if (!activeClone) return;
+        const touch = e.changedTouches ? e.changedTouches[0] : e;
+        activeClone.remove();
+        activeClone = null;
+
+        window.removeEventListener('touchmove', onMove);
+        window.removeEventListener('touchend', onEnd);
+
+        const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!dropTarget) return;
+
+        const targets = getDropTargets();
+        for (let target of targets) {
+          if (target.contains(dropTarget) || target === dropTarget) {
+            onDropSuccess(element, target);
+            break;
+          }
+        }
+      }
+
+      element.addEventListener('touchstart', onStart, { passive: true });
+    }
+
+    /* LOADING SCREEN */
+    let loadProgress = 0;
+    const loadingBar = document.getElementById("loadingBar");
+    const loadingText = document.getElementById("loadingText");
+    const loadingScreen = document.getElementById("loadingScreen");
+
+    const loadingInterval = setInterval(() => {
+      loadProgress += 10;
+      loadingBar.style.width = loadProgress + "%";
+      loadingText.innerText = `Memuat Dapur... ${loadProgress}%`;
+
+      if (loadProgress >= 100) {
+        clearInterval(loadingInterval);
+        loadingScreen.style.opacity = "0";
+        setTimeout(() => {
+          loadingScreen.style.display = "none";
+          startComicScreen();
+        }, 400);
+      }
+    }, 40);
+
+    /* KOMIK SCRIPT */
+    const comicImages = [
+      "https://lh3.googleusercontent.com/d/1YPzv0Lv-wm_l5Bjw43Hm9oHBk5Zvg9x8=s0",
+      "https://lh3.googleusercontent.com/d/1rTY86vDj-pm1ZKNNal-LvPkD0whN88RT=s0",
+      "https://lh3.googleusercontent.com/d/113RWr-H9-ph6V9giFxc9bh9BqRT8TKG3=s0"
+    ];
+    let currentComicIndex = 0;
+
+    function startComicScreen() {
+      document.getElementById("comicScreen").style.display = "flex";
+      updateComicSlide();
+    }
+
+    function updateComicSlide() {
+      const imgElement = document.getElementById("comicImage");
+      const btnNext = document.getElementById("btnNextComic");
+      const btnPrev = document.getElementById("btnPrevComic");
+      const dotsContainer = document.getElementById("dotsContainer");
+
+      imgElement.src = comicImages[currentComicIndex];
+      dotsContainer.innerHTML = "";
+      comicImages.forEach((_, index) => {
+        const dot = document.createElement("div");
+        dot.className = `dot ${index === currentComicIndex ? "active" : ""}`;
+        dotsContainer.appendChild(dot);
+      });
+
+      btnPrev.style.display = currentComicIndex === 0 ? "none" : "inline-flex";
+      btnNext.innerHTML = currentComicIndex === comicImages.length - 1 ? "Buka Peta Level! 🗺️" : "Lanjut ➔";
+    }
+
+    function nextComic() {
+      if (currentComicIndex < comicImages.length - 1) {
+        currentComicIndex++;
+        updateComicSlide();
+      } else {
+        document.getElementById("comicScreen").style.display = "none";
+        promptStudentName();
+      }
+    }
+
+    function prevComic() {
+      if (currentComicIndex > 0) {
+        currentComicIndex--;
+        updateComicSlide();
+      }
+    }
+
+    function promptStudentName() {
+      document.getElementById("nameModal").style.display = "flex";
+    }
+
+    function saveStudentName() {
+      const input = document.getElementById("initialStudentName").value.trim();
+      if (!input) {
+        alert("Mohon masukkan namamu terlebih dahulu!");
+        return;
+      }
+      globalStudentName = input;
+      document.getElementById("studentName").value = globalStudentName;
+      document.getElementById("nameModal").style.display = "none";
+      showRoadmap();
+    }
+
+    /* ROADMAP / PETA GAME UI */
+    function showRoadmap() {
+      document.getElementById("appScreen").style.display = "none";
+      const roadmap = document.getElementById("roadmapScreen");
+      roadmap.style.display = "flex";
+
+      const grid = document.getElementById("roadmapGrid");
+      grid.innerHTML = "";
+
+      for (let i = 1; i <= 7; i++) {
+        const node = document.createElement("div");
+        const isUnlocked = i <= unlockedLevel;
+        const isCompleted = levelStats[i].passed;
+
+        let statusClass = "locked";
+        let badgeText = "🔒 Terkunci";
+        let badgeClass = "badge-locked";
+
+        if (isCompleted) {
+          statusClass = "completed";
+          badgeText = "✅ Selesai";
+          badgeClass = "badge-completed";
+        } else if (isUnlocked) {
+          statusClass = "unlocked";
+          badgeText = "⭐ Terbuka";
+          badgeClass = "badge-unlocked";
+        }
+
+        node.className = `node-level ${statusClass}`;
+        node.innerHTML = `
+          <div class="node-icon">${levelIcons[i]}</div>
+          <div class="node-number">Level ${i}</div>
+          <div class="node-badge ${badgeClass}">${badgeText}</div>
+        `;
+
+        if (isUnlocked) {
+          node.onclick = () => {
+            roadmap.style.display = "none";
+            startMainApp(i);
+          };
+        }
+        grid.appendChild(node);
+      }
+    }
+
+    /* MAIN APP CONTROL */
+    function startMainApp(targetLvl = 1) {
+      document.getElementById("appScreen").style.display = "block";
+      if (!timerInterval) startTimer();
+      switchLevel(targetLvl);
+    }
+
+    function getTimeString() {
+      const minutes = Math.floor(secondsElapsed / 60);
+      const seconds = secondsElapsed % 60;
+      return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function startTimer() {
+      const timerDisplay = document.getElementById("timerDisplay");
+      timerInterval = setInterval(() => {
+        secondsElapsed++;
+        timerDisplay.innerHTML = `⏱️ ${getTimeString()}`;
+      }, 1000);
+    }
+
+    function updateLevelBarUI() {
+      for (let i = 1; i <= 7; i++) {
+        const btn = document.getElementById(`btn-lvl-${i}`);
+        if (i <= unlockedLevel) {
+          btn.classList.remove('disabled');
+          btn.innerText = `Lv ${i}` + (levelStats[i].passed ? ' ✅' : '');
+        } else {
+          btn.classList.add('disabled');
+          btn.innerText = `Lv ${i} 🔒`;
+        }
+        if (i === currentLevel) btn.classList.add('active');
+        else btn.classList.remove('active');
+      }
+
+      const btnSheets = document.getElementById("btnSheetsFinal");
+      if (levelStats[7].passed) {
+        btnSheets.style.display = "inline-flex";
+      } else {
+        btnSheets.style.display = "none";
+      }
+    }
+
+    function switchLevel(lvl) {
+      if (lvl > unlockedLevel) {
+        showModal(false, "Level Terkunci 🔒", "Selesaikan dan jawab dengan benar pada level sebelumnya terlebih dahulu!");
+        return;
+      }
+      currentLevel = lvl;
+      isSoalMode = false;
+      updateLevelBarUI();
+      renderLevelQuestion();
+    }
+
+    function getFracHTML(num, den) {
+      return `<span class="frac-container"><span class="frac-num">${num}</span><span class="frac-den">${den}</span></span>`;
+    }
+
+    function createRealisticPizzaSVG(num, den, size = 110) {
+      const cx = size / 2, cy = size / 2, radius = (size / 2) - 6;
+      let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">`;
+      svg += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="#d48c46" stroke="#a05d27" stroke-width="2"/>`;
+      
+      for (let i = 0; i < den; i++) {
+        const startAngle = (i * 2 * Math.PI / den) - Math.PI / 2;
+        const endAngle = ((i + 1) * 2 * Math.PI / den) - Math.PI / 2;
+        const x1 = cx + radius * Math.cos(startAngle);
+        const y1 = cy + radius * Math.sin(startAngle);
+        const x2 = cx + radius * Math.cos(endAngle);
+        const y2 = cy + radius * Math.sin(endAngle);
+
+        if (i < num) {
+          svg += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2} Z" fill="#f1c40f" stroke="#a05d27" stroke-width="1.5"/>`;
+          const midAngle = (startAngle + endAngle) / 2;
+          const px = cx + (radius * 0.55) * Math.cos(midAngle);
+          const py = cy + (radius * 0.55) * Math.sin(midAngle);
+          svg += `<circle cx="${px}" cy="${py}" r="${radius * 0.15}" fill="#c0392b"/>`;
+        } else {
+          svg += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 0 1 ${x2} ${y2} Z" fill="#ffffff" stroke="#7f8c8d" stroke-width="1.5"/>`;
+        }
+      }
+      svg += `</svg>`;
+      return svg;
+    }
+
+    function createDynamicSliceSVG(angleStart, angleEnd, size = 60) {
+      const cx = size / 2, cy = size / 2, radius = (size / 2) - 4;
+      const x1 = cx + radius * Math.cos(angleStart);
+      const y1 = cy + radius * Math.sin(angleStart);
+      const x2 = cx + radius * Math.cos(angleEnd);
+      const y2 = cy + radius * Math.sin(angleEnd);
+      
+      let largeArc = (angleEnd - angleStart > Math.PI) ? 1 : 0;
+
+      let svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">`;
+      svg += `<path d="M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z" fill="#f1c40f" stroke="#a05d27" stroke-width="1.5"/>`;
+      svg += `<circle cx="${cx}" cy="${cy}" r="4" fill="#c0392b"/>`;
+      svg += `</svg>`;
+      return svg;
+    }
+
+    function createBarSlicesHTML(num, den) {
+      let html = '';
+      for (let i = 0; i < den; i++) {
+        html += (i < num) 
+          ? `<div style="flex:1; background:#ffb74d; border:1px dashed #e65100;"></div>`
+          : `<div style="flex:1; background:#795548; opacity:0.3;"></div>`;
+      }
+      return html;
+    }
+
+    function getQuestionData(lvl, isSoal) {
+      if (!isSoal) {
+        return {
+          1: { targetNum: 3, totalNum: 6 },
+          2: { targetNum: 4, totalNum: 8, itemIcon: "🍎" },
+          3: { targetNum: 2, minCuts: 2 },
+          4: { refNum: 2, refDen: 4, targetDen: 8, correctNum: 4 },
+          5: { den: 6, sortDirection: 'asc' },
+          6: { num1: 2, num2: 3, den: 6 },
+          7: { numA: 2, denA: 5, numB: 4, denB: 5, correctLarger: 'B' }
+        }[lvl] || {};
+      } else {
+        return {
+          1: { targetNum: 5, totalNum: 8 },
+          2: { targetNum: 5, totalNum: 10, itemIcon: "🍊" },
+          3: { targetNum: 3, minCuts: 2 },
+          4: { refNum: 3, refDen: 4, targetDen: 8, correctNum: 6 },
+          5: { den: 8, sortDirection: 'desc' },
+          6: { num1: 3, num2: 4, den: 8 },
+          7: { numA: 5, denA: 8, numB: 3, denB: 8, correctLarger: 'A' }
+        }[lvl] || {};
+      }
+    }
+
+    function renderLevelQuestion() {
+      const banner = document.getElementById("bannerText");
+      const stage = document.getElementById("stageArea");
+      const modeBadge = document.getElementById("modeBadge");
+      const btnAction = document.getElementById("btnAction");
+
+      activeQuestion = getQuestionData(currentLevel, isSoalMode);
+
+      if (!isSoalMode) {
+        stage.className = "workspace mode-latihan";
+        modeBadge.className = "mode-badge latihan";
+        modeBadge.innerText = "🟩 MODE LATIHAN";
+        btnAction.className = "btn-action btn-latihan";
+        btnAction.innerHTML = "Selesai Latihan & Masuk Soal ➔";
+      } else {
+        stage.className = "workspace mode-soal";
+        modeBadge.className = "mode-badge soal";
+        modeBadge.innerText = "🟥 MODE SOAL EVALUASI";
+        btnAction.className = "btn-action btn-check";
+        btnAction.innerHTML = "Periksa Jawaban 🎯";
+      }
+
+      btnAction.style.display = "inline-flex";
+
+      if (currentLevel === 1) {
+        const q = activeQuestion;
+        const prefix = !isSoalMode ? "Latihan Level 1:" : "Soal Evaluasi Level 1:";
+        banner.innerHTML = `<strong>${prefix}</strong> Sajikan roti senilai ${getFracHTML(q.targetNum, q.totalNum)}! Klik kepingan roti untuk memilihnya.`;
+        selectedBreadCountLvl1 = 0;
+        
+        let breadHTML = '';
+        for (let i = 0; i < q.totalNum; i++) {
+          breadHTML += `<div class="bread-slice" onclick="toggleBreadLvl1(this)">1/${q.totalNum}</div>`;
+        }
+
+        stage.querySelector('#workspaceContent').innerHTML = `
+          <div class="bread-tray">
+            ${breadHTML}
+          </div>
+          <div style="font-size:1.8rem; font-weight:700; color:#ff5964; margin-top:10px;">
+            Pecahan Terpilih: ${getFracHTML('<span id="numLvl1">0</span>', q.totalNum)}
+          </div>
+        `;
+      }
+      else if (currentLevel === 2) {
+        const q = activeQuestion;
+        const prefix = !isSoalMode ? "Latihan Level 2:" : "Soal Evaluasi Level 2:";
+        banner.innerHTML = `<strong>${prefix}</strong> Seret buah ${q.itemIcon} dari meja ke piring untuk menyajikan ${getFracHTML(q.targetNum, q.totalNum)}!`;
+        setupDnDLevel2(q.totalNum, q.itemIcon);
+      }
+      else if (currentLevel === 3) {
+        const q = activeQuestion;
+        const prefix = !isSoalMode ? "Latihan Level 3:" : "Soal Evaluasi Level 3:";
+        banner.innerHTML = `<strong>${prefix}</strong> 1) Buat garis potong hingga pizza terbagi menjadi 4 bagian. 2) Seret <b>${q.targetNum} potongan</b> ke piring saji untuk menyajikan ${getFracHTML(q.targetNum, 4)}!`;
+        cutLinesLvl3 = [];
+        setupFreeCutAndDragLevel3(q.targetNum);
+      }
+      else if (currentLevel === 4) {
+        const q = activeQuestion;
+        const prefix = !isSoalMode ? "Latihan Level 4:" : "Soal Evaluasi Level 4:";
+        banner.innerHTML = `<strong>${prefix}</strong> Klik kepingan Cokelat B agar ukurannya SENILAI dengan Cokelat A (${getFracHTML(q.refNum, q.refDen)})!`;
+        stage.querySelector('#workspaceContent').innerHTML = `
+          <div style="width:100%; max-width:420px; display:flex; flex-direction:column; gap:16px;">
+            <div><b>Acuan Cokelat A: ${getFracHTML(q.refNum, q.refDen)}</b><div class="bread-container-fixed" style="width:100%; background:#4e342e; height:40px; margin-top:4px;">${createBarSlicesHTML(q.refNum, q.refDen)}</div></div>
+            <div><b>Pilihan Cokelat B: <span id="display-dynamic-lvl4" style="color:#ff5964;">${getFracHTML(0, q.targetDen)}</span></b><div class="bread-container-fixed" id="quiz-choco-4" style="width:100%; background:#4e342e; height:40px; margin-top:4px;"></div></div>
+          </div>
+        `;
+        const box = document.getElementById('quiz-choco-4');
+        for (let i = 0; i < q.targetDen; i++) {
+          const slice = document.createElement('div');
+          slice.className = 'choco-slice';
+          slice.onclick = () => { slice.classList.toggle('selected'); updateLvl4DynamicFrac(q.targetDen); };
+          box.appendChild(slice);
+        }
+      }
+      else if (currentLevel === 5) {
+        const q = activeQuestion;
+        const prefix = !isSoalMode ? "Latihan Level 5:" : "Soal Evaluasi Level 5:";
+        const sortText = q.sortDirection === 'asc' ? 'TERKECIL ke TERBESAR' : 'TERBESAR ke TERKECIL';
+        banner.innerHTML = `<strong>${prefix}</strong> Seret kartu pizza realistis untuk mengurutkan dari <b>${sortText}</b>!`;
+        setupSortDnDLevel5(q.den, q.sortDirection);
+      }
+      else if (currentLevel === 6) {
+        const q = activeQuestion;
+        const prefix = !isSoalMode ? "Latihan Level 6:" : "Soal Evaluasi Level 6:";
+        banner.innerHTML = `<strong>${prefix}</strong> Hitung hasil penjumlahan ${getFracHTML(q.num1, q.den)} + ${getFracHTML(q.num2, q.den)}! Ketikkan angka pembilang & penyebut pada kotak.`;
+        stage.querySelector('#workspaceContent').innerHTML = `
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px; justify-content:center; flex-wrap:wrap;">
+            ${createRealisticPizzaSVG(q.num1, q.den, 90)} <b style="font-size:1.8em; color:#ff5964;">+</b>
+            ${createRealisticPizzaSVG(q.num2, q.den, 90)} <b style="font-size:1.8em; color:#ff5964;">=</b>
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:8px; background:#fff; padding:16px; border-radius:16px; border:2px dashed #ff5964;">
+            <label style="font-weight:bold; font-size:0.9rem; color:#2b2d42;">Ketik Jawabanmu:</label>
+            <input type="number" id="inputNumLvl6" class="input-frac-box" placeholder="?" min="1" max="20">
+            <div style="width:70px; height:3px; background:#2b2d42; margin:2px 0;"></div>
+            <input type="number" id="inputDenLvl6" class="input-frac-box" placeholder="?" min="1" max="20">
+          </div>
+        `;
+      }
+      else if (currentLevel === 7) {
+        const q = activeQuestion;
+        const prefix = !isSoalMode ? "Latihan Level 7:" : "Soal Evaluasi Level 7:";
+        banner.innerHTML = `<strong>${prefix}</strong> Pilih pecahan yang ukurannya LEBIH BESAR!`;
+        btnAction.style.display = 'none';
+        stage.querySelector('#workspaceContent').innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:16px; align-items:center; width:100%; max-width:450px;">
+            <div class="interactive-item" style="width:100%; text-align:center;" onclick="checkQuizLvl7('A')"><b>Opsi A: Pecahan ${getFracHTML(q.numA, q.denA)}</b><div class="bread-container-fixed" style="width:100%; background:#4e342e; height:35px; margin-top:5px;">${createBarSlicesHTML(q.numA, q.denA)}</div></div>
+            <div class="interactive-item" style="width:100%; text-align:center;" onclick="checkQuizLvl7('B')"><b>Opsi B: Pecahan ${getFracHTML(q.numB, q.denB)}</b><div class="bread-container-fixed" style="width:100%; background:#4e342e; height:35px; margin-top:5px;">${createBarSlicesHTML(q.numB, q.denB)}</div></div>
+          </div>
+        `;
+      }
+    }
+
+    function setupFreeCutAndDragLevel3(targetNum) {
+      const stage = document.getElementById("workspaceContent");
+      stage.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; gap:12px; width:100%;">
+          <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap; justify-content:center;">
+            <button class="slice-control-btn" onclick="resetPizzaLevel3()">🔄 Reset Potongan</button>
+            <span style="font-size:0.85rem; color:#555;" id="lvl3InstructionStatus">Status: Buat garis potong (Minimal 2 garis untuk menghasilkan 4 bagian)</span>
+          </div>
+
+          <div style="display:flex; gap:20px; align-items:center; justify-content:center; flex-wrap:wrap; width:100%;">
+            <div style="text-align:center; background:#fff; padding:10px; border-radius:16px; border:2px dashed #2ec4b6;">
+              <div style="font-weight:bold; margin-bottom:4px; font-size:0.85rem;">Meja Pemotongan Pizza</div>
+              <canvas id="pizzaCutCanvas" width="160" height="160" style="cursor:crosshair; border-radius:50%; background:#fff; box-shadow:0 4px 10px rgba(0,0,0,0.1); touch-action:none;"></canvas>
+              <div id="slicedPiecesContainer" style="display:flex; gap:6px; margin-top:8px; min-height:50px; justify-content:center; flex-wrap:wrap; max-width:180px;"></div>
+            </div>
+
+            <div style="text-align:center; background:#fff; padding:10px; border-radius:16px; border:2px dashed #ff5964; min-width:180px;">
+              <div style="font-weight:bold; margin-bottom:4px; font-size:0.85rem;">Piring Saji 🍽️ (<span id="plateCountLabel">0</span>/4)</div>
+              <div id="plateZoneLvl3" class="dnd-zone" style="min-width:150px; min-height:100px; background:#fff5f5; border:2px dashed #ff5964;">
+                <span style="font-size:0.8rem; color:#aaa;" id="platePlaceholderLvl3">Seret ${targetNum} potongan ke sini</span>
+              </div>
+              <div style="font-size:0.85rem; font-weight:bold; color:#ff5964; margin-top:6px;">
+                Perintah: Sajikan ${targetNum} Potongan
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      drawPizzaCutCanvasLvl3();
+
+      const canvas = document.getElementById('pizzaCutCanvas');
+      
+      function handleStart(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        isDrawingLvl3 = true;
+        drawStartX = clientX - rect.left;
+        drawStartY = clientY - rect.top;
+        currentDragX = drawStartX;
+        currentDragY = drawStartY;
+      }
+
+      function handleMove(clientX, clientY) {
+        if (!isDrawingLvl3) return;
+        const rect = canvas.getBoundingClientRect();
+        currentDragX = clientX - rect.left;
+        currentDragY = clientY - rect.top;
+        drawPizzaCutCanvasLvl3();
+      }
+
+      function handleEnd() {
+        if (!isDrawingLvl3) return;
+        isDrawingLvl3 = false;
+
+        const cx = 80, cy = 80;
+        let angle1 = Math.atan2(drawStartY - cy, drawStartX - cx);
+        let angle2 = Math.atan2(currentDragY - cy, currentDragX - cx);
+        if (angle1 < 0) angle1 += Math.PI * 2;
+        if (angle2 < 0) angle2 += Math.PI * 2;
+
+        const dist = Math.hypot(currentDragX - drawStartX, currentDragY - drawStartY);
+        if (dist > 25) {
+          cutLinesLvl3.push({ angle1, angle2 });
+          drawPizzaCutCanvasLvl3();
+          updateLevel3PoolAndStatus();
+        }
+      }
+
+      canvas.addEventListener('mousedown', (e) => handleStart(e.clientX, e.clientY));
+      canvas.addEventListener('mousemove', (e) => handleMove(e.clientX, e.clientY));
+      window.addEventListener('mouseup', handleEnd);
+
+      canvas.addEventListener('touchstart', (e) => {
+        const touch = e.touches[0];
+        handleStart(touch.clientX, touch.clientY);
+      }, { passive: true });
+
+      canvas.addEventListener('touchmove', (e) => {
+        if (!isDrawingLvl3) return;
+        const touch = e.touches[0];
+        handleMove(touch.clientX, touch.clientY);
+      }, { passive: true });
+
+      canvas.addEventListener('touchend', handleEnd);
+    }
+
+    function resetPizzaLevel3() {
+      cutLinesLvl3 = [];
+      setupFreeCutAndDragLevel3(activeQuestion.targetNum);
+    }
+
+    function drawPizzaCutCanvasLvl3() {
+      const canvas = document.getElementById('pizzaCutCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const cx = 80, cy = 80, radius = 70;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.fillStyle = '#f1c40f';
+      ctx.fill();
+      ctx.strokeStyle = '#d48c46';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      for (let a = 0.5; a < Math.PI * 2; a += 1.8) {
+        const px = cx + 30 * Math.cos(a);
+        const py = cy + 30 * Math.sin(a);
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#c0392b';
+        ctx.fill();
+      }
+
+      cutLinesLvl3.forEach(line => {
+        ctx.beginPath();
+        ctx.moveTo(cx + radius * Math.cos(line.angle1), cy + radius * Math.sin(line.angle1));
+        ctx.lineTo(cx + radius * Math.cos(line.angle2), cy + radius * Math.sin(line.angle2));
+        ctx.strokeStyle = '#c0392b';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      });
+
+      if (isDrawingLvl3) {
+        ctx.beginPath();
+        ctx.moveTo(drawStartX, drawStartY);
+        ctx.lineTo(currentDragX, currentDragY);
+        ctx.strokeStyle = '#2ec4b6';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    function updateLevel3PoolAndStatus() {
+      const statusEl = document.getElementById('lvl3InstructionStatus');
+      const pool = document.getElementById('slicedPiecesContainer');
+      pool.innerHTML = '';
+
+      if (cutLinesLvl3.length >= 2) {
+        statusEl.innerHTML = `<b style="color:#2ec4b6;">Hebat! Pizza terbagi menjadi 4 bagian. Silakan seret potongannya!</b>`;
+        
+        const totalSlices = 4;
+        for (let i = 0; i < totalSlices; i++) {
+          const aStart = i * (2 * Math.PI / totalSlices);
+          const aEnd = (i + 1) * (2 * Math.PI / totalSlices);
+
+          const sliceEl = document.createElement('div');
+          sliceEl.className = 'pizza-slice-item';
+          sliceEl.draggable = true;
+          sliceEl.id = `dyn-slice-${i}`;
+          sliceEl.innerHTML = createDynamicSliceSVG(aStart, aEnd, 48);
+
+          sliceEl.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', sliceEl.id);
+          });
+
+          enableTouchDrag(
+            sliceEl,
+            () => [document.getElementById('plateZoneLvl3'), document.getElementById('slicedPiecesContainer')],
+            (elem, target) => {
+              target.appendChild(elem);
+              updatePlateCountLvl3();
+            }
+          );
+
+          pool.appendChild(sliceEl);
+        }
+      } else {
+        statusEl.innerText = `Garis potong dibuat: ${cutLinesLvl3.length}/2 (Buat minimal 2 garis untuk jadi 4 bagian)`;
+      }
+
+      setupLevel3PlateEvents();
+    }
+
+    function setupLevel3PlateEvents() {
+      const plateZone = document.getElementById('plateZoneLvl3');
+      const tablePool = document.getElementById('slicedPiecesContainer');
+
+      plateZone.removeEventListener('dragover', handleDragOverLvl3);
+      plateZone.removeEventListener('drop', handleDropToPlateLvl3);
+      tablePool.removeEventListener('dragover', handleDragOverLvl3);
+      tablePool.removeEventListener('drop', handleDropToTableLvl3);
+
+      plateZone.addEventListener('dragover', handleDragOverLvl3);
+      plateZone.addEventListener('drop', handleDropToPlateLvl3);
+      tablePool.addEventListener('dragover', handleDragOverLvl3);
+      tablePool.addEventListener('drop', handleDropToTableLvl3);
+    }
+
+    function handleDragOverLvl3(e) { e.preventDefault(); }
+
+    function handleDropToPlateLvl3(e) {
+      e.preventDefault();
+      const id = e.dataTransfer.getData('text/plain');
+      const el = document.getElementById(id);
+      const plateZone = document.getElementById('plateZoneLvl3');
+      if (el) {
+        document.getElementById('platePlaceholderLvl3').style.display = 'none';
+        plateZone.appendChild(el);
+        updatePlateCountLvl3();
+      }
+    }
+
+    function handleDropToTableLvl3(e) {
+      e.preventDefault();
+      const id = e.dataTransfer.getData('text/plain');
+      const el = document.getElementById(id);
+      const tablePool = document.getElementById('slicedPiecesContainer');
+      if (el) {
+        tablePool.appendChild(el);
+        updatePlateCountLvl3();
+      }
+    }
+
+    function updatePlateCountLvl3() {
+      const count = document.querySelectorAll('#plateZoneLvl3 .pizza-slice-item').length;
+      document.getElementById('plateCountLabel').innerText = count;
+      const placeholder = document.getElementById('platePlaceholderLvl3');
+      if (placeholder) {
+        placeholder.style.display = count > 0 ? 'none' : 'block';
+      }
+    }
+
+    function setupSortDnDLevel5(den, sortDirection = 'asc') {
+      const stage = document.getElementById("workspaceContent");
+      const label1 = sortDirection === 'asc' ? '1. Terkecil' : '1. Terbesar';
+      const label2 = '2. Sedang';
+      const label3 = sortDirection === 'asc' ? '3. Terbesar' : '3. Terkecil';
+
+      let valA = 1, valB = Math.floor(den / 2), valC = den - 1;
+
+      stage.innerHTML = `
+        <div style="width:100%; display:flex; flex-direction:column; align-items:center; gap:16px;">
+          <div class="dnd-zone" id="source-pool-lvl5" style="min-width:320px; background:#eef9f8; min-height:120px;">
+            <div class="draggable-pizza-card" draggable="true" id="card-C" data-val="${valC}">${createRealisticPizzaSVG(valC, den, 90)}</div>
+            <div class="draggable-pizza-card" draggable="true" id="card-A" data-val="${valA}">${createRealisticPizzaSVG(valA, den, 90)}</div>
+            <div class="draggable-pizza-card" draggable="true" id="card-B" data-val="${valB}">${createRealisticPizzaSVG(valB, den, 90)}</div>
+          </div>
+          <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <div class="sort-slot" id="target-slot-1" data-rank="1"><span class="sort-slot-label">${label1}</span></div>
+            <div class="sort-slot" id="target-slot-2" data-rank="2"><span class="sort-slot-label">${label2}</span></div>
+            <div class="sort-slot" id="target-slot-3" data-rank="3"><span class="sort-slot-label">${label3}</span></div>
+          </div>
+        </div>
+      `;
+
+      const cards = stage.querySelectorAll('.draggable-pizza-card');
+      const slots = stage.querySelectorAll('.sort-slot, #source-pool-lvl5');
+      cards.forEach(card => {
+        card.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', card.id));
+        enableTouchDrag(
+          card,
+          () => Array.from(slots),
+          (elem, target) => target.appendChild(elem)
+        );
+      });
+
+      slots.forEach(slot => {
+        slot.addEventListener('dragover', (e) => e.preventDefault());
+        slot.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const card = document.getElementById(e.dataTransfer.getData('text/plain'));
+          if (card) slot.appendChild(card);
+        });
+      });
+    }
+
+    function toggleBreadLvl1(el) {
+      el.classList.toggle("selected");
+      selectedBreadCountLvl1 = document.querySelectorAll(".bread-slice.selected").length;
+      document.getElementById("numLvl1").innerText = selectedBreadCountLvl1;
+    }
+
+    function setupDnDLevel2(totalNum, initialFruitIcon) {
+      const stage = document.getElementById("workspaceContent");
+      let tableSlots = '', plateSlots = '';
+      for (let i = 0; i < totalNum; i++) {
+        tableSlots += `<div class="fruit-slot table-slot" id="table-slot-${i}" data-ghost="${initialFruitIcon}"><div class="draggable-fruit" draggable="true" id="fruit-${i}">${initialFruitIcon}</div></div>`;
+        plateSlots += `<div class="fruit-slot plate-slot-item" id="plate-slot-${i}"></div>`;
+      }
+      stage.innerHTML = `
+        <div class="dnd-container">
+          <div style="text-align:center;"><b>Meja Buah:</b><div class="dnd-zone" id="table-zone">${tableSlots}</div></div>
+          <div style="text-align:center;"><b>Piring Saji: 🍽️</b><div class="dnd-zone" id="plate-zone">${plateSlots}</div></div>
+        </div>
+        <div style="margin-top:10px; font-size:1.4em;">Pecahan di Piring: <span id="plate-frac-display" style="color:#ff5964; font-weight:bold;">${getFracHTML(0, totalNum)}</span></div>
+      `;
+
+      const draggables = stage.querySelectorAll('.draggable-fruit');
+      const tableZone = document.getElementById('table-zone');
+      const plateZone = document.getElementById('plate-zone');
+
+      draggables.forEach(f => {
+        f.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', f.id));
+        enableTouchDrag(
+          f,
+          () => [plateZone, tableZone],
+          (elem, target) => {
+            if (target === plateZone) {
+              const slot = plateZone.querySelector('.plate-slot-item:empty');
+              if (slot) slot.appendChild(elem);
+            } else if (target === tableZone) {
+              const idx = elem.id.split('-')[1];
+              document.getElementById(`table-slot-${idx}`).appendChild(elem);
+            }
+            updateDnDFractionDisplay(totalNum);
+          }
+        );
+      });
+
+      plateZone.addEventListener('dragover', (e) => e.preventDefault());
+      plateZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const f = document.getElementById(e.dataTransfer.getData('text/plain'));
+        const slot = plateZone.querySelector('.plate-slot-item:empty');
+        if (f && slot) { slot.appendChild(f); updateDnDFractionDisplay(totalNum); }
+      });
+      tableZone.addEventListener('dragover', (e) => e.preventDefault());
+      tableZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const f = document.getElementById(e.dataTransfer.getData('text/plain'));
+        if (f) {
+          const idx = f.id.split('-')[1];
+          document.getElementById(`table-slot-${idx}`).appendChild(f);
+          updateDnDFractionDisplay(totalNum);
+        }
+      });
+    }
+
+    function updateDnDFractionDisplay(totalNum) {
+      const count = document.querySelectorAll('#plate-zone .draggable-fruit').length;
+      document.getElementById('plate-frac-display').innerHTML = getFracHTML(count, totalNum);
+    }
+
+    function updateLvl4DynamicFrac(targetDen) {
+      const count = document.querySelectorAll('#quiz-choco-4 .choco-slice.selected').length;
+      document.getElementById('display-dynamic-lvl4').innerHTML = getFracHTML(count, targetDen);
+    }
+
+    function handleAction() {
+      if (!isSoalMode) {
+        isSoalMode = true;
+        renderLevelQuestion();
+        return;
+      }
+
+      let isCorrect = false;
+      const q = activeQuestion;
+
+      if (currentLevel === 1) isCorrect = (selectedBreadCountLvl1 === q.targetNum);
+      else if (currentLevel === 2) isCorrect = (document.querySelectorAll('#plate-zone .draggable-fruit').length === q.targetNum);
+      else if (currentLevel === 3) {
+        const plateCount = document.querySelectorAll('#plateZoneLvl3 .pizza-slice-item').length;
+        isCorrect = (cutLinesLvl3.length >= 2 && plateCount === q.targetNum);
+      }
+      else if (currentLevel === 4) isCorrect = (document.querySelectorAll('#quiz-choco-4 .choco-slice.selected').length === q.correctNum);
+      else if (currentLevel === 5) {
+        const s1 = document.getElementById('target-slot-1').querySelector('.draggable-pizza-card');
+        const s2 = document.getElementById('target-slot-2').querySelector('.draggable-pizza-card');
+        const s3 = document.getElementById('target-slot-3').querySelector('.draggable-pizza-card');
+        if (s1 && s2 && s3) {
+          const v1 = parseInt(s1.getAttribute('data-val'));
+          const v2 = parseInt(s2.getAttribute('data-val'));
+          const v3 = parseInt(s3.getAttribute('data-val'));
+
+          if (q.sortDirection === 'asc') {
+            isCorrect = (v1 < v2 && v2 < v3);
+          } else {
+            isCorrect = (v1 > v2 && v2 > v3);
+          }
+        }
+      }
+      else if (currentLevel === 6) {
+        const inputNum = parseInt(document.getElementById('inputNumLvl6').value);
+        const inputDen = parseInt(document.getElementById('inputDenLvl6').value);
+        isCorrect = (inputNum === (q.num1 + q.num2) && inputDen === q.den);
+      }
+
+      processValidation(isCorrect);
+    }
+
+    function checkQuizLvl7(choice) {
+      if (!isSoalMode) {
+        isSoalMode = true;
+        renderLevelQuestion();
+        return;
+      }
+      processValidation(choice === activeQuestion.correctLarger);
+    }
+
+    function getExplanationFeedback(level, isSoal) {
+      const q = getQuestionData(level, isSoal);
+      switch(level) {
+        case 1:
+          return `Pecahan ${getFracHTML(q.targetNum, q.totalNum)} berarti kamu harus memilih atau menyajikan tepat sebanyak <b>${q.targetNum} bagian</b> dari total <b>${q.totalNum} bagian</b> roti yang tersedia.`;
+        case 2:
+          return `Untuk menyajikan ${getFracHTML(q.targetNum, q.totalNum)}, pastikan kamu menyeret tepat <b>${q.targetNum} buah ${q.itemIcon}</b> ke atas piring saji dari total ${q.totalNum} buah yang ada di meja.`;
+        case 3:
+          return `Pada Level 3, buat minimal 2 garis potong pada pizza untuk membaginya menjadi 4 bagian, lalu seret tepat <b>${q.targetNum} potongan pizza</b> ke atas piring saji!`;
+        case 4:
+          return `Pecahan senilai memiliki nilai besar yang sama. Cokelat A berukuran ${getFracHTML(q.refNum, q.refDen)}, maka kamu perlu memilih bagian Cokelat B yang proporsinya setara (yaitu <b>${q.correctNum} dari ${q.targetDen} bagian</b>).`;
+        case 5:
+          if (q.sortDirection === 'asc') {
+            return `Urutan pecahan dari yang TERKECIL dilihat dari jumlah bagian pembilang terkecil hingga terbesar pada penyebut yang sama (${q.den}).`;
+          } else {
+            return `Urutan pecahan dari yang TERBESAR dilihat dari jumlah bagian pembilang terbesar hingga terkecil pada penyebut yang sama (${q.den}).`;
+          }
+        case 6:
+          return `Penjumlahan pecahan dengan penyebut yang sama dilakukan dengan menjumlahkan pembilangnya saja, sementara penyebutnya tetap. Contoh: ${q.num1} + ${q.num2} = ${q.num1 + q.num2}, penyebut tetap ${q.den} (${getFracHTML(q.num1 + q.num2, q.den)}).`;
+        case 7:
+          return `Untuk membandingkan pecahan dengan penyebut yang sama, pecahan dengan pembilang yang lebih besar menunjukkan ukuran yang lebih luas atau lebih banyak.`;
+        default:
+          return `Periksa kembali konsep pembilang (bagian yang dipilih) dan penyebut (total seluruh bagian yang sama besar).`;
+      }
+    }
+
+    function recalculateAccumulatedScore() {
+      let completedCount = 0;
+      for (let i = 1; i <= 7; i++) {
+        if (levelStats[i].passed) {
+          completedCount++;
+        }
+      }
+      // Bobot nilai per level disesuaikan hingga maksimal 100 untuk 7 level
+      if (completedCount === 7) {
+        currentScore = 100;
+      } else {
+        currentScore = Math.round(completedCount * (100 / 7));
+      }
+      document.getElementById("scoreText").innerText = currentScore;
+    }
+
+    function processValidation(isCorrect) {
+      levelStats[currentLevel].attempts++;
+
+      if (isCorrect) {
+        if (!levelStats[currentLevel].passed) {
+          levelStats[currentLevel].passed = true;
+          levelStats[currentLevel].timePassed = getTimeString();
+          recalculateAccumulatedScore();
+        }
+
+        if (unlockedLevel === currentLevel && currentLevel < 7) {
+          unlockedLevel = currentLevel + 1;
+        }
+
+        // Pengiriman otomatis akumulasi ke spreadsheet
+        sendDataToSpreadsheet("Dalam Progres");
+        updateLevelBarUI();
+
+        if (currentLevel === 7) {
+          openSheetsModal();
+        } else {
+          showModal(true, "🎉 Jawaban Benar!", `Luar biasa! Kamu berhasil menyelesaikan Level ${currentLevel}. Skor Akumulasi: <b>${currentScore}/100</b>.<br>Seluruh progres & percobaan otomatis tersimpan!`, true);
+        }
+      } else {
+        const explanation = getExplanationFeedback(currentLevel, isSoalMode);
+        showModal(false, "❌ Belum Tepat", `Jawabanmu masih keliru.<br><br>💡 <b>Tips Konsep yang Benar:</b><br>${explanation}`);
+      }
+    }
+
+    function showModal(isSuccess, title, msg, showNextBtn = false) {
+      document.getElementById('modalTitle').innerText = title;
+      document.getElementById('modalTitle').style.color = isSuccess ? '#2ec4b6' : '#e74c3c';
+      document.getElementById('modalBody').innerHTML = msg;
+      
+      const closeBtn = document.getElementById('btnModalClose');
+      const nextBtn = document.getElementById('btnNextLevelModal');
+      
+      closeBtn.innerText = isSuccess ? "Tutup 👍" : "Coba Lagi 🔄";
+      nextBtn.style.display = showNextBtn ? 'inline-flex' : 'none';
+
+      document.getElementById('modalBox').style.display = 'flex';
+    }
+
+    function closeModal() { document.getElementById('modalBox').style.display = 'none'; }
+
+    function goToNextLevel() {
+      closeModal();
+      if (currentLevel < 7) {
+        switchLevel(currentLevel + 1);
+      }
+    }
+
+    function showHistoryModal() {
+      const tbody = document.getElementById("historyTableBody");
+      tbody.innerHTML = "";
+
+      for (let i = 1; i <= 7; i++) {
+        const stat = levelStats[i];
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><b>Lv ${i}</b></td>
+          <td>${stat.passed ? '<span style="color:#2ec4b6; font-weight:bold;">Lulus ✅</span>' : '<span style="color:#e74c3c;">Belum ❌</span>'}</td>
+          <td>${stat.attempts}x coba</td>
+          <td>${stat.timePassed}</td>
+        `;
+        tbody.appendChild(row);
+      }
+
+      document.getElementById("historyModal").style.display = "flex";
+    }
+
+    function closeHistoryModal() { document.getElementById("historyModal").style.display = "none"; }
+
+    function speakCurrentQuestion() {
+      const banner = document.getElementById("bannerText").innerText;
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(banner);
+        utterance.lang = 'id-ID';
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function openSheetsModal() { document.getElementById("sheetsModal").style.display = "flex"; }
+    function closeSheetsModal() { document.getElementById("sheetsModal").style.display = "none"; }
+
+    function submitFinalDataToSpreadsheet() {
+      const name = document.getElementById("studentName").value.trim() || globalStudentName;
+
+      if (!name) {
+        alert("Harap isi nama siswa!");
+        return;
+      }
+
+      globalStudentName = name;
+      sendDataToSpreadsheet("Selesai Seluruh Game");
+      alert("🎉 Rekap nilai akumulasi seluruh level, total percobaan, dan durasi berhasil dikirim ke Spreadsheet Guru!");
+      closeSheetsModal();
+    }
+  </script>
+</body>
+</html>
